@@ -92,6 +92,7 @@ cp -r ../install/* .
 git lfs install
 git lfs track "clang-repl"
 git lfs track "libclang-cpp.so.23.0git"
+git lfs track "llvm"
 git checkout README.md # keep this as it's not part of the toolchain itself
 git add .
 git commit -asm "Mornye: Update to $rel_date build
