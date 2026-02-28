@@ -85,20 +85,35 @@ clang_version="$(install/bin/clang --version | head -n1 | cut -d' ' -f4)"
 
 # Push to GitHub
 # Update Git repository
-git clone "https://mornye1517:$GH_TOKEN@github.com/mornye1517/mornye_clang" rel_repo
-pushd rel_repo || exit
-rm -fr ./*
-cp -r ../install/* .
-git lfs install
-git lfs track "clang-repl"
-git lfs track "libclang-cpp.so.23.0git"
-git lfs track "llvm"
-git checkout README.md # keep this as it's not part of the toolchain itself
-git add .
-git commit -asm "Mornye: Update to $rel_date build
-LLVM commit: $llvm_commit_url
-Clang Version: $clang_version
-Binutils version: $binutils_ver
-Builder commit: https://github.com/mornye1517/mornye_clang/commit/$builder_commit"
-git push -f
+# --- [ BAGIAN BARU: ARCHIVING ] ---
+msg "Packing toolchain..."
+ARCHIVE_NAME="Mornye-Clang-$rel_date.tar.xz"
+
+# Masuk ke folder install dan kompres isinya
+tar -cJf "$ARCHIVE_NAME" -C "$install" .
+
+# --- [ BAGIAN BARU: UPLOAD KE GITHUB RELEASES ] ---
+msg "Uploading to GitHub Releases..."
+
+# Pastikan GH_TOKEN ada di environment
+if [ -z "$GH_TOKEN" ]; then
+    err "GH_TOKEN kaga ada, bre! Gagal upload."
+    exit 1
+fi
+
+# Pakai GitHub CLI buat bikin release dan upload file
+# Tag: $rel_date, Title: Tanggal Friendly
+gh release create "$rel_date" "$ARCHIVE_NAME" \
+    --repo "mornye1517/mornye_clang" \
+    --title "Mornye Clang: $rel_friendly_date" \
+    --notes "
+### Build Info
+* **LLVM Commit:** [$short_llvm_commit]($llvm_commit_url)
+* **Clang Version:** $clang_version
+* **Binutils Version:** $binutils_ver
+* **Builder Commit:** [Click Here](https://github.com/mornye1517/mornye_clang/commit/$builder_commit)
+* **Build Date:** $rel_friendly_date
+"
+
+msg "Selesai! Cek repo lu di bagian Releases, bre."
 popd || exit
